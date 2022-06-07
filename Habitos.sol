@@ -4,7 +4,7 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract Habitos3 {
+contract Habitos {
 
     address author;
     enum State {Empezado, Finalizado}
@@ -14,10 +14,6 @@ contract Habitos3 {
     uint public totalRetos = 0;
 
     mapping (address => uint[]) retosPorUser;
-
-    function getRetosActivosPorUser() public view returns(uint[] memory){
-        return retosPorUser[msg.sender];
-    }
     
     constructor() {
         author = msg.sender;
@@ -107,6 +103,10 @@ contract Habitos3 {
         if (retos[indexReto].user.cumplioReto == CumplioReto.NoSupero){
             delRetoInactivoUser(indexReto);
         }
+    }
+
+    function getRetosActivosPorUser() public view returns(uint[] memory){
+        return retosPorUser[msg.sender];
     }
 
     function delRetoInactivoUser(uint indexReto) internal {
