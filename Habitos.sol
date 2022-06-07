@@ -11,7 +11,13 @@ contract Habitos3 {
     enum CumplioReto {NoSupero, Supero}
     enum CobroPremio {NoCobrado, Cobrado}
     uint montoReto = 1000000000000000000; //monto para ingresar al reto de 1 Celo (o Eth)
-    uint totalRetos = 0;
+    uint public totalRetos = 0;
+
+    mapping (address => uint[]) retosPorUser;
+
+    function getRetosActivosPorUser() public view returns(uint[] memory){
+        return retosPorUser[msg.sender];
+    }
     
     constructor() {
         author = msg.sender;
@@ -77,6 +83,7 @@ contract Habitos3 {
             );
         retos.push(nuevoReto);
         emit RetoCreado(totalRetos, msg.sender);
+        retosPorUser[msg.sender].push(totalRetos);
         totalRetos+=1;
     }
 
@@ -97,6 +104,20 @@ contract Habitos3 {
         require(calcularDia(indexReto) > 2, "Todavia no transcurrio el tiempo total");
         retos[indexReto].estado = State.Finalizado;
         calcularGanador(indexReto);
+        if (retos[indexReto].user.cumplioReto == CumplioReto.NoSupero){
+            delRetoInactivoUser(indexReto);
+        }
+    }
+
+    function delRetoInactivoUser(uint indexReto) internal {
+        uint[] storage arreglo = retosPorUser[msg.sender];
+        for (uint i=0; i < arreglo.length; i++) {
+            if (arreglo[i] == indexReto) {
+                arreglo[i] = arreglo[arreglo.length-1];
+                arreglo.pop();
+            }
+        }
+        retosPorUser[msg.sender] = arreglo;
     }
 
     function calcularGanador(uint indexReto) internal {
@@ -119,6 +140,7 @@ contract Habitos3 {
             payable(retos[indexReto].user.wallet).transfer(montoReto);
             retos[indexReto].deposito -= montoReto;
             retos[indexReto].user.cobroPremio = CobroPremio.Cobrado; // se marca cobrado al User
+            delRetoInactivoUser(indexReto);
             emit AnunciarPremioCobrado(indexReto, msg.sender); // se anuncia premio cobrado por el User
         }
 }
