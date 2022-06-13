@@ -3,8 +3,9 @@
 // Version para un solo Usuario
 
 pragma solidity >=0.7.0 <0.9.0;
+import "./HABNFT.sol";
 
-contract Habitos {
+contract Habitos is HABNFT{
 
     address author;
     enum State {Empezado, Finalizado}
@@ -23,6 +24,7 @@ contract Habitos {
         address wallet;
         CumplioReto cumplioReto;
         CobroPremio cobroPremio;
+        bool cobroNFT;
         bool[3] dias;
     }
     
@@ -51,6 +53,8 @@ contract Habitos {
 
     event AnunciarPremioCobrado (uint indexReto, address wallet);
 
+    event NFTMinteado(uint id, address wallet);
+
     modifier onlyUser(uint indexReto) {
         require(msg.sender == retos[indexReto].user.wallet, "No es el Usuario del reto");
         _;
@@ -67,12 +71,12 @@ contract Habitos {
     }
 
     // Crear un reto por un Usuario
-    function crearReto(string memory _name) payable public {
+    function crearReto(string memory _name) payable public returns (uint) {
         require(msg.value == montoReto, "El monto depositado no es el correcto, se requiere 1 Celo");
         Reto memory nuevoReto = Reto(
             totalRetos,                  // id del reto
             _name,                      // Nombre del reto
-            User(msg.sender, CumplioReto.NoSupero, CobroPremio.NoCobrado ,[false, false, false]),  //datos del User
+            User(msg.sender, CumplioReto.NoSupero, CobroPremio.NoCobrado, false, [false, false, false]),  //datos del User
             msg.value,            // Cantidad de Eth
             State.Empezado,        // Estado
             block.timestamp        // Fecha de Comienzo
@@ -81,6 +85,7 @@ contract Habitos {
         emit RetoCreado(totalRetos, msg.sender);
         retosPorUser[msg.sender].push(totalRetos);
         totalRetos+=1;
+        return(totalRetos-1);
     }
 
   // De prueba puse un reto cada minuto, durante 3 minutos.
@@ -143,4 +148,13 @@ contract Habitos {
             delRetoInactivoUser(indexReto);
             emit AnunciarPremioCobrado(indexReto, msg.sender); // se anuncia premio cobrado por el User
         }
+
+   
+    //Mint nft si supero el reto
+    function mint(uint indexReto) public onlyUser(indexReto) {
+        require(retos[indexReto].user.cumplioReto == CumplioReto.Supero, "Usted no ha superado este reto");
+        require(retos[indexReto].user.cobroNFT == false, "Este NFT ya ha sido cobrado");
+        mintNFT(msg.sender);
+        emit NFTMinteado(indexReto, msg.sender);
+    }
 }
