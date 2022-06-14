@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -16,9 +15,10 @@ contract HABNFT is ERC721 {
         return "https://ipfs.io/ipfs/QmbmMFHEwtadq3hZkrmoBfxjn4zJw5gbzCBJ4sD3Utgw2k";
     }
 
-    function mintNFT(address to) internal {
+    function mintNFT(address to) internal returns (uint tokenID) {
         require(token_count < maxSupply, "No hay mas HabitosNFT :(");
         token_count  += 1;
         _mint(to, token_count);
+        return token_count;
     }
 }

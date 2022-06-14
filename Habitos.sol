@@ -53,7 +53,7 @@ contract Habitos is HABNFT{
 
     event AnunciarPremioCobrado (uint indexReto, address wallet);
 
-    event NFTMinteado(uint id, address wallet);
+    event NFTMinteado(uint idReto, uint idNFT);
 
     modifier onlyUser(uint indexReto) {
         require(msg.sender == retos[indexReto].user.wallet, "No es el Usuario del reto");
@@ -154,7 +154,8 @@ contract Habitos is HABNFT{
     function mint(uint indexReto) public onlyUser(indexReto) {
         require(retos[indexReto].user.cumplioReto == CumplioReto.Supero, "Usted no ha superado este reto");
         require(retos[indexReto].user.cobroNFT == false, "Este NFT ya ha sido cobrado");
-        mintNFT(msg.sender);
-        emit NFTMinteado(indexReto, msg.sender);
+        uint idNFT = mintNFT(msg.sender);
+        retos[indexReto].user.cobroNFT = true;
+        emit NFTMinteado(indexReto, idNFT);
     }
 }
